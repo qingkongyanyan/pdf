@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="resource" type="application/l10n" href="locale/locale.properties">
+	<style type="text/css">
+		.contain{
+			width: 100%;
+			height: 98%;
+			position: absolute;
+			left: 0;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			margin: auto;
+		}
+		#the-canvas{
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+</head>
+<body>
+	<div class="contain">
+		<canvas id="the-canvas"></canvas>
+	</div>
+	<script src="../build/pdf.js"></script>
+	<script type="text/javascript">
+		PDFJS.workerSrc = '../build/pdf.worker.js';
+		PDFJS.cMapUrl = 'cmaps/';
+		PDFJS.cMapPacked = true;
+		var pdfDoc = null,  
+		    pageNum = 1,  
+		    pageRendering = false,  
+		    pageNumPending = null,  
+		    scale = 1.5,  
+		    canvas = document.getElementById('the-canvas'),  
+		    ctx = canvas.getContext('2d');  
+		  
+		function renderPage(num) {  
+		  pageRendering = true;  
+		  pdfDoc.getPage(num).then(function(page) {  
+		    var viewport = page.getViewport(scale);  
+		    canvas.height = viewport.height;  
+		    canvas.width = viewport.width;  
+		    var renderContext = {  
+		      canvasContext: ctx,  
+		      viewport: viewport  
+		    };  
+		    var renderTask = page.render(renderContext);  
+		  
+		    renderTask.promise.then(function() {  
+		      pageRendering = false;  
+		      if (pageNumPending !== null) {  
+		        // New page rendering is pending  
+		        renderPage(pageNumPending);  
+		        pageNumPending = null;  
+		      }  
+		    });  
+		  });  
+		}  
+		  
+		function queueRenderPage(num) {  
+		  if (pageRendering) {  
+		    pageNumPending = num;  
+		  } else {  
+		    renderPage(num);  
+		  }  
+		}  
+		  
+		function onPrevPage() {  
+		  if (pageNum <= 1) {  
+		    return;  
+		  }  
+		  pageNum--;  
+		  queueRenderPage(pageNum);  
+		}  
+		  
+		function onNextPage() {  
+		  if (pageNum >= pdfDoc.numPages) {  
+		    return;  
+		  }  
+		  pageNum++;  
+		  queueRenderPage(pageNum);  
+		}  
+
+		var fileurl = 'http://updatecredit.nuoyuan.com.cn/credith5-web-boss/api/common/showFile?filePath=/home/appserver/filedata/credit/contract_save_path/c63edf1a-c2a1-4ab0-8239-b9c31fb400f6//sign/授权委托书_费昀烨(540102198603086086).pdf';
+		//function getpdf(fileurl) {
+		  	PDFJS.getDocument(fileurl).then(function(pdfDoc_) {
+	          pdfDoc = pdfDoc_;  
+	          renderPage(pageNum);
+	           /*if(pdfDoc_!=null){
+	            android.dismissProgress(pdfDoc.numPages);
+	          }*/
+	       }); 
+		//};
+	</script>
+</body>
+</html>
